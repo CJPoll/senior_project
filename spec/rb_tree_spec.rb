@@ -19,6 +19,7 @@ describe "Red Black Tree" do
 		root = @tree.instance_variable_get(:@root)
 		root.key.should == 5
 		root.value.should == 5
+		root.black?.should == true
 	end
 
 	it "should return the tree after an insert" do
@@ -124,9 +125,13 @@ describe "Red Black Tree" do
 		root = @tree.instance_variable_get(:@root)
 		sentinel = RBTree.sentinel
 		
+		root.black?.should == true
+
 		root.right.key.should == 6
+		root.right.black?.should == false
 		root.right.parent.should == root
 		root.left.should == sentinel
+		root.left.black?.should == true
 	end
 
 	it "should properly insert a node less than root" do
@@ -160,8 +165,6 @@ describe "Red Black Tree" do
 		@tree.insert_node grandparent, parent
 		@tree.insert_node parent, child 
 
-		debugger
-
 		grandparent.right.should == parent
 		parent.right.should == child
 
@@ -182,7 +185,7 @@ describe "Red Black Tree" do
 	end
 
 	it "should properly do a left rotation (RLb)" do
-		sentinel = RBTree::Node.new
+		sentinel = RBTree.sentinel
 
 		grandparent = RBTree::Node.new 5
 		grandparent.black = true
@@ -209,7 +212,96 @@ describe "Red Black Tree" do
 		child.left.should == sentinel
 		child.right.should == sentinel
 
-		@tree.left_rotation(grandparent, sentinel).should == parent
+		@tree.left_rotation(grandparent).should == parent
+		parent.left.should == grandparent
+		grandparent.right.should == child
+		parent.parent.nil?.should == true
+		parent.left.should == grandparent
 
+		child.left.should == sentinel
+		child.right.should == sentinel
+		grandparent.left.should == sentinel
+		parent.right.should == sentinel
+	end
+
+	it "should properly do a right rotation (LLb)" do
+		sentinel = RBTree.sentinel
+
+		grandparent = RBTree::Node.new 7
+		grandparent.black = true
+
+		parent = RBTree::Node.new 6
+		parent.black = false
+
+		child = RBTree::Node.new 5
+		child.black = false
+
+		grandparent.right = sentinel
+		parent.right = sentinel
+		child.left = sentinel
+		child.right = sentinel
+
+		@tree.insert_node grandparent, parent
+		@tree.insert_node parent, child
+
+		grandparent.left.should == parent
+		parent.left.should == child
+
+		grandparent.right.should == sentinel
+		parent.right.should == sentinel
+		child.left.should == sentinel
+		child.right.should == sentinel
+
+		@tree.right_rotation(grandparent).should == parent
+
+		grandparent.left.should == sentinel
+		grandparent.right.should == sentinel
+
+		parent.left.should == child
+		grandparent.parent.should == parent
+		parent.right.should == grandparent
+		parent.parent.should == nil
+	end
+
+	it "should properly do a right rotation (LRb)" do
+		sentinel = RBTree.sentinel
+
+		grandparent = RBTree::Node.new 7
+		grandparent.black = true
+
+		parent = RBTree::Node.new 5
+		parent.black = false
+
+		child = RBTree::Node.new 6
+		child.black = false
+
+		grandparent.right = sentinel
+		parent.left = sentinel
+		child.left = sentinel
+		child.right = sentinel
+
+		@tree.insert_node grandparent, parent
+		@tree.insert_node parent, child
+
+		grandparent.left.should == parent
+		parent.right.should == child
+
+		grandparent.right.should == sentinel
+		parent.left.should == sentinel
+		child.left.should == sentinel
+		child.right.should == sentinel
+
+		@tree.right_rotation(grandparent).should == parent
+
+		grandparent.left.should == child
+		parent.right.should == grandparent
+
+		parent.parent.should == nil
+		grandparent.parent.should == parent
+
+		child.left.should == sentinel
+		child.right.should == sentinel
+		grandparent.right.should == sentinel
+		parent.left.should == sentinel
 	end
 end

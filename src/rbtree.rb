@@ -1,9 +1,10 @@
 class RBTree
 	class Node
-		attr_accessor :key, :value, :black, :left, :right, :parent
+		attr_accessor :key, :value, :left, :right, :parent
+		attr_writer :black
 		def initialize key = nil, value = key
 			@parent = nil
-			@black = true
+			@black = false
 			@key = key
 			@value = value
 			@left = nil
@@ -17,6 +18,7 @@ class RBTree
 
 	def initialize 
 		@@sentinel = Node.new 
+		@@sentinel.black = true
 		@root = @@sentinel
 	end
 
@@ -42,9 +44,46 @@ class RBTree
 			end
 
 			insert_node parent, new_node
+			cleanup new_node
 		end
+		@root.black = true
 
 		return self
+	end
+
+	def cleanup child
+		parent = child.parent
+		return if parent == nil
+		grandparent = parent.parent
+		return if grandparent == nil
+		while parent.black? == false
+			uncle = nil
+			direction = nil
+			if parent = grandparent.left
+				uncle = grandparent.right
+				direction = :left
+			else
+				uncle = grandparent.left
+				direction = :right
+			end
+
+			if uncle.black? == false
+				parent.black = true
+				uncle.black = true
+				grandparent.black = false
+				child = parent
+				parent = child.parent
+				grandparent = parent.parent
+			else
+				if direction == :left
+					right_rotation grandparent
+				else
+					left_rotation grandparent
+				end
+
+				parent.black = true
+			end
+		end
 	end
 
 	def binary_search node, &block
@@ -85,7 +124,36 @@ class RBTree
 		grandparent.right = parent.left
 		parent.left.parent = grandparent unless parent.left == @@sentinel
 		parent.parent = grandparent.parent
-		@root = parent if grandparent.parent == nil
+		if grandparent.parent == nil
+			@root = parent 
+		elsif grandparent = grandparent.parent.left
+			grandparent.parent.left = parent
+		else
+			grandparent.parent.right = y
+		end
+
+		parent.left = grandparent
+		grandparent.parent = parent
+
+		return parent
+	end
+
+	def right_rotation grandparent
+		parent = grandparent.left
+		grandparent.left = parent.right
+		parent.right.parent = grandparent unless parent.right == @@sentinel
+		parent.parent = grandparent.parent
+
+		if grandparent.parent == nil
+			@root = parent 
+		elsif grandparent = grandparent.parent.left
+			grandparent.parent.left = parent
+		else
+			grandparent.parent.right = y
+		end
+
+		parent.right = grandparent
+		grandparent.parent = parent
 
 		return parent
 	end
